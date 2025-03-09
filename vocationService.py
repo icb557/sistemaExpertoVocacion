@@ -1,4 +1,5 @@
 import unicodedata
+from collections import defaultdict
 
 def define_rules(sistemaExperto):
     """Definición de templates para intereses y vocaciones"""
@@ -9,7 +10,7 @@ def define_rules(sistemaExperto):
     """Definición de las reglas del sistema experto vocacional"""
 
     clips_rules = """
-    (defrule vocacion_ingenieria
+    (defrule ingenieria
     (or  (interes (tipo "interes") (persona ?persona) (interes "matematicas"))
             (interes (tipo "interes") (persona ?persona) (interes "tecnologia")))
     =>
@@ -17,7 +18,7 @@ def define_rules(sistemaExperto):
     (printout t ?persona " es apto para una carrera en Ingeniería." crlf)
     )
 
-    (defrule vocacion_computacion
+    (defrule computacion
     (or  (interes (tipo "interes") (persona ?persona) (interes "programacion"))
             (interes (tipo "interes") (persona ?persona) (interes "logica")))
     =>
@@ -25,7 +26,7 @@ def define_rules(sistemaExperto):
     (printout t ?persona " tiene vocación para Ciencias de la Computación." crlf)
     )
 
-    (defrule vocacion_arte_disenio
+    (defrule arte
     (or  (interes (tipo "interes") (persona ?persona) (interes "creatividad"))
             (interes (tipo "interes") (persona ?persona) (interes "diseno")))
     =>
@@ -33,7 +34,7 @@ def define_rules(sistemaExperto):
     (printout t ?persona " es apto para una carrera en Arte y Diseño." crlf)
     )
 
-    (defrule vocacion_salud
+    (defrule salud
     (or  (interes (tipo "interes") (persona ?persona) (interes "ayudar"))
             (interes (tipo "interes") (persona ?persona) (interes "biologia")))
     =>
@@ -41,7 +42,7 @@ def define_rules(sistemaExperto):
     (printout t ?persona " tiene vocación para Ciencias de la Salud." crlf)
     )
 
-    (defrule vocacion_negocios
+    (defrule negocios
     (or  (interes (tipo "interes") (persona ?persona) (interes "liderazgo"))
             (interes (tipo "interes") (persona ?persona) (interes "estrategia")))
     =>
@@ -61,15 +62,20 @@ def run_inputs(sistemaExperto, intereses, nombreUsuario):
     interesTemplate = sistemaExperto.find_template("interes")
     for interes in intereses:        
         interesTemplate.assert_fact(tipo = 'interes', persona = nombreUsuario, interes = format_interes(interes))
+    results = get_results(sistemaExperto)
     sistemaExperto.run()
-
-def get_results(sistemaExperto):
-    results = []
-    for fact in sistemaExperto.facts():
-        if fact.template.name == "vocacion":
-            results.append(fact['vocacion'])
     sistemaExperto.reset()
     return results
+
+def get_results(sistemaExperto):
+    activation_counts = defaultdict(int)  # Use defaultdict for activation counts
+
+    for ac in sistemaExperto.activations():
+        activation_counts[ac.name] += 1  # Increment count for each activation
+
+    sorted_activation_counts = sorted(activation_counts.items(), key=lambda item: item[1], reverse=True)
+
+    return sorted_activation_counts
 
 def finish(sistemaExperto):
     sistemaExperto.clear()

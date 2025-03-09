@@ -20,11 +20,16 @@ def show_menu(sistemaExperto):
         else:
             seleccionados.append(interes)
             boton.config(bg="green", fg="white")  # Marcar seleccionado
+    
+    def reset_seleccion():
+        for boton in botones:
+            boton.config(bg="white", fg="black")  # Volver al color original
+        seleccionados.clear()
 
     # Crear ventana principal
     root = tk.Tk()
     root.title("Selecciona tus intereses")
-    root.geometry("600x700")
+    root.geometry("600x550")
 
     # Etiqueta y entrada para el nombre
     tk.Label(root, text="Ingrese su nombre:", font=("Arial", 12)).pack(pady=5)
@@ -32,28 +37,33 @@ def show_menu(sistemaExperto):
     nombre_entry.pack(pady=5)
 
     # Crear los botones de intereses como "cajas"
+    tk.Label(root, text="Intereses:", font=("Arial", 12)).pack(pady=5)
     botones = []
     frame = tk.Frame(root)
     frame.pack(pady=10)
 
-    for interes in intereses:
+    for index, interes in enumerate(intereses):
         btn = tk.Button(frame, text=interes, font=("Arial", 10), width=15, height=2,
                         bg="white", fg="black", relief="raised")
         btn.config(command=lambda b=btn, i=interes: toggle_interes(b, i))
-        btn.pack(pady=5)
+        btn.grid(row=index % 5, column=index // 5, padx=5, pady=5)
         botones.append(btn)
 
     # Botón para confirmar selección
     def registrar():
+        print(seleccionados)
         if validar_datos(nombre_entry, seleccionados):
-            run_inputs(sistemaExperto, seleccionados, nombre_entry.get().strip())
-            results = get_results(sistemaExperto)
+            results = run_inputs(sistemaExperto, seleccionados, nombre_entry.get().strip())
             if results:
-                messagebox.showinfo("Resultados", f"De acuerdo a tus intereses, estas son las carreras que te recomendamos aspirar: \n\n{', '.join(results)}")
+                formatted_results = [f"{index + 1}. {vocacion[0]}" for index, (vocacion) in enumerate(results)]
+                messagebox.showinfo("Resultados", f"Estas son las carreras ordenadas en base a tus interes a las que te recomendamos aspirar: \n\n{'\n'.join(formatted_results)}")
+                reset_seleccion()
             else:
                 messagebox.showinfo("Resultados", "No se encontraron recomendaciones basadas en tus intereses.")
 
+    tk.Button(root, text="Limpiar", font=("Arial", 12), command=reset_seleccion).pack(pady=10)
     tk.Button(root, text="Registrar", font=("Arial", 12), command=registrar).pack(pady=10)
+    tk.Button(root, text="Cerrar", font=("Arial", 12), command=root.quit).pack(pady=10)
 
     # Ejecutar aplicación
     root.mainloop()
